@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Корзина - 2SOUL{% endblock %}
+
+{% block content %}
+<section class="cart-section">
+    <div class="container">
+        <h1 class="page-title">Ваша корзина</h1>
+        
+        <div class="cart-layout">
+            <!-- Cart Items -->
+            <div class="cart-items-container">
+                <div id="cart-items">
+                    <!-- Items load here -->
+                </div>
+            </div>
+            
+            <!-- Cart Summary -->
+            <div class="cart-summary">
+                <h2>Итого</h2>
+                <div class="summary-row">
+                    <span>Сумма:</span>
+                    <span id="subtotal">₽0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Доставка:</span>
+                    <span id="shipping">Бесплатно</span>
+                </div>
+                <div class="summary-row total">
+                    <span>К оплате:</span>
+                    <span id="total">₽0</span>
+                </div>
+                <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-large" id="checkout-btn">
+                    Оформить заказ
+                </a>
+                <a href="{{ url_for('catalog') }}" class="btn btn-secondary">
+                    Продолжить покупки
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadCart();
+});
+
+function loadCart() {
+    fetch('/api/cart')
+        .then(response => response.json())
+        .then(data => {
+            if (data.items.length === 0) {
+                document.getElementById('cart-items').innerHTML = `
+                    <div class="empty-cart">
+                        <p>Ваша корзина пуста</p>
+                        <a href="{{ url_for('catalog') }}" class="btn btn-primary">
+                            Перейти в каталог
+                        </a>
+                    </div>
+                `;
+                document.getElementById('checkout-btn').style.display = 'none';
+            } else {
+                renderCartItems(data.items);
+                updateTotal(data.items);
+            }
+        });
+}
+
+function renderCartItems(items) {
+    const container = document.getElementById('cart-items');
+    container.innerHTML = '';
+    
+    items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div class="item-image">
+                <img src="${item.image_url || '/static/img/placeholder.png'}" alt="${item.name}">
+            </div>
+            <div class="item-details">
+                <h3>${item.name}</h3>
+                <p class="item-size">Размер: ${item.size}</p>
+                <p class="item-price">₽${item.price.toFixed(0)}</p>
+            </div>
+            <div class="item-quantity">
+                <button onclick="updateQuantity(${index}, -1)">−</button>
+                <input type="number" value="${item.quantity}" readonly>
+                <button onclick="updateQuantity(${index}, 1)">+</button>
+            </div>
+            <div class="item-total">
+                ₽${(item.price * item.quantity).toFixed(0)}
+            </div>
+            <button class="item-remove" onclick="removeFromCart(${index})">✕</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function updateQuantity(index, delta) {
+    fetch('/api/cart/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            index: index,
+            delta: delta
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadCart();
+    });
+}
+
+function removeFromCart(index) {
+    if (confirm('Удалить товар?')) {
+        fetch('/api/cart/remove', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ index: index })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadCart();
+            updateCartCount();
+        });
+    }
+}
+
+function updateTotal(items) {
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    document.getElementById('subtotal').textContent = `₽${subtotal.toFixed(0)}`;
+    document.getElementById('total').textContent = `₽${subtotal.toFixed(0)}`;
+}
+</script>
+{% endblock %}

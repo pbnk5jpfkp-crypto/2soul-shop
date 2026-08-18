@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена - 2SOUL{% endblock %}
+
+{% block content %}
+<section class="checkout-section">
+    <div class="container" style="text-align: center;">
+        <h1 style="font-size: 72px; color: #667eea; margin: 40px 0;">404</h1>
+        <h2 style="margin-bottom: 20px;">Страница не найдена</h2>
+        <p style="color: #666; margin-bottom: 30px;">
+            К сожалению, страница, которую вы ищете, не существует.
+        </p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Вернуться на главную</a>
+    </div>
+</section>
+{% endblock %}

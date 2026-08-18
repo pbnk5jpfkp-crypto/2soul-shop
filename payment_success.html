@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Платёж успешен - 2SOUL{% endblock %}
+
+{% block content %}
+<section class="checkout-section">
+    <div class="container">
+        <div style="max-width: 600px; margin: 0 auto; background: white; padding: 50px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 64px; margin-bottom: 20px;">✓</div>
+            <h1 style="color: #28a745; margin-bottom: 20px;">Платёж принят!</h1>
+            
+            <p style="font-size: 16px; color: #666; margin-bottom: 30px;">
+                Спасибо за ваш заказ. Платёж успешно обработан.
+            </p>
+            
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left;">
+                <p><strong>Номер заказа:</strong> #{{ order.order_number }}</p>
+                <p><strong>Сумма:</strong> ₽{{ order.total_amount|int }}</p>
+                <p><strong>Статус:</strong> <span style="background: #d4edda; padding: 4px 12px; border-radius: 4px; color: #155724;">В обработке</span></p>
+            </div>
+            
+            <p style="color: #666; margin-bottom: 20px;">
+                Подтверждение заказа отправлено на <strong>{{ order.customer_email }}</strong>
+            </p>
+            
+            <p style="color: #666; margin-bottom: 30px;">
+                Мы свяжёмся с вами в ближайшее время для уточнения деталей доставки.
+            </p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">На главную</a>
+                <a href="{{ url_for('catalog') }}" class="btn btn-secondary">Продолжить покупки</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

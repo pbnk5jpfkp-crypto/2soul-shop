@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}2SOUL - Премиальная мода{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">2SOUL</h1>
+        <p class="hero-subtitle">Две души, один стиль. Премиальная мода для минималистов</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('catalog') }}" class="btn btn-primary">Перейти в каталог</a>
+            <a href="#updates" class="btn btn-secondary">Узнать больше</a>
+        </div>
+    </div>
+    <div class="hero-background"></div>
+</section>
+
+<!-- Floating Products Carousel -->
+<section class="products-showcase">
+    <h2 class="section-title">Избранная коллекция</h2>
+    <div class="carousel-container">
+        <div class="carousel-track" id="carousel-track">
+            <!-- Products load here via JS -->
+        </div>
+    </div>
+    <p class="carousel-hint">Прокрутите для просмотра всех товаров →</p>
+</section>
+
+<!-- Updates Section -->
+<section class="updates-section" id="updates">
+    <div class="container">
+        <h2 class="section-title">Грядущие обновления</h2>
+        <div class="updates-grid">
+            <div class="update-card">
+                <div class="update-icon">📱</div>
+                <h3>Мобильное приложение</h3>
+                <p>Скоро выпустим нативное приложение для iOS и Android с эксклюзивными предложениями.</p>
+            </div>
+            <div class="update-card">
+                <div class="update-icon">💳</div>
+                <h3>Больше способов оплаты</h3>
+                <p>Криптовалюта, крипто-платежи и альтернативные цифровые кошельки.</p>
+            </div>
+            <div class="update-card">
+                <div class="update-icon">🚀</div>
+                <h3>Персональные рекомендации</h3>
+                <p>AI-ассистент подберёт идеальные товары именно для вас.</p>
+            </div>
+            <div class="update-card">
+                <div class="update-icon">🎁</div>
+                <h3>Программа лояльности</h3>
+                <p>Кумулируйте баллы с каждой покупки и обменивайте на скидки.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 class="stat-number" data-count="0">0</h3>
+                <p id="stat-products">Товаров в каталоге</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-number" data-count="10000">0</h3>
+                <p>Довольных клиентов</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-number" data-count="48">0</h3>
+                <p>Часов доставка</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// Load featured products
+document.addEventListener('DOMContentLoaded', function() {
+    loadFeaturedProducts();
+    initCounters();
+});
+
+function loadFeaturedProducts() {
+    console.log('Loading featured products...');
+    fetch('/api/products?limit=10')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Featured products loaded:', data.products.length);
+            const track = document.getElementById('carousel-track');
+            
+            // Update stat
+            document.querySelector('[data-count="0"]').textContent = data.products.length;
+            
+            if (data.products.length === 0) {
+                track.innerHTML = '<p style="padding: 40px; color: #999;">Товары будут добавлены скоро...</p>';
+                return;
+            }
+            
+            track.innerHTML = ''; // Clear
+            
+            data.products.forEach(product => {
+                const card = createProductCard(product);
+                track.appendChild(card);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('carousel-track').innerHTML = '<p style="padding: 40px; color: #dc3545;">Ошибка загрузки</p>';
+        });
+}
+
+function createProductCard(product) {
+    const div = document.createElement('div');
+    div.className = 'product-card';
+    div.innerHTML = `
+        <div class="product-image">
+            <img src="${product.image_url || 'https://via.placeholder.com/300?text=Product'}" 
+                 alt="${product.name}"
+                 onerror="this.src='https://via.placeholder.com/300?text=Product'">
+            <span class="product-category">${product.category}</span>
+        </div>
+        <div class="product-info">
+            <h3>${product.name}</h3>
+            <p class="product-price">₽${product.price.toLocaleString()}</p>
+            <button class="btn-small" onclick="window.location.href='/catalog'">Подробнее</button>
+        </div>
+    `;
+    return div;
+}
+
+function initCounters() {
+    const counters = document.querySelectorAll('.stat-number');
+    counters.forEach(counter => {
+        const target = parseInt(counter.dataset.count);
+        let count = 0;
+        const increment = target / 60;
+        
+        const timer = setInterval(() => {
+            count += increment;
+            if (count >= target) {
+                counter.textContent = target.toLocaleString();
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(count).toLocaleString();
+            }
+        }, 30);
+    });
+}
+</script>
+{% endblock %}

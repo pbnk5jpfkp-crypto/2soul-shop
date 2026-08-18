@@ -1,0 +1,752 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель - 2SOUL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        background: #f5f7fa;
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 0;
+        margin-bottom: 30px;
+    }
+    
+    .admin-header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .admin-header-content h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    
+    .admin-header-content > div:last-child {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .admin-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #eee;
+    }
+    
+    .admin-tabs button {
+        padding: 15px 25px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    
+    .admin-tabs button.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+    
+    .admin-tabs button:hover {
+        color: #667eea;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .orders-table thead {
+        background: #f8f9fa;
+    }
+    
+    .orders-table th,
+    .orders-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .orders-table tbody tr:hover {
+        background: #f9f9f9;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-new {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .status-processing {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .status-completed {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-cancelled {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .order-detail {
+        margin-bottom: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .order-detail h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .order-detail h4 {
+        margin: 15px 0 10px 0;
+        color: #555;
+    }
+    
+    .order-detail p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    
+    .order-items-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .order-items-list li {
+        padding: 10px;
+        background: #f9f9f9;
+        margin-bottom: 5px;
+        border-radius: 3px;
+        font-size: 14px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-box {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        border-top: 3px solid #667eea;
+    }
+    
+    .stat-box h3 {
+        font-size: 12px;
+        color: #999;
+        text-transform: uppercase;
+        margin: 0;
+        margin-bottom: 10px;
+    }
+    
+    .stat-box .number {
+        font-size: 32px;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .btn-small {
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-right: 5px;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+    }
+    
+    .product-card-admin {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: 100px 1fr 150px;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .product-card-admin img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 4px;
+        background: #f9f9f9;
+    }
+    
+    .product-card-admin-info h4 {
+        margin: 0 0 5px 0;
+        color: #333;
+    }
+    
+    .product-card-admin-info p {
+        margin: 3px 0;
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .product-card-admin-actions {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+        padding: 30px;
+        animation: slideUp 0.3s;
+    }
+    
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: #ccc;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .modal-close:hover {
+        color: #333;
+    }
+    
+    .modal-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    
+    .btn-add-product {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="admin-header-content">
+        <div>
+            <h1>📊 Админ-панель 2SOUL</h1>
+        </div>
+        <div>
+            <span>👤 {{ current_user.username }}</span>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Выход</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-box">
+            <h3>📬 Новых заказов</h3>
+            <div class="number">{{ stats.new_orders }}</div>
+        </div>
+        <div class="stat-box">
+            <h3>⏳ В обработке</h3>
+            <div class="number">{{ stats.processing_orders }}</div>
+        </div>
+        <div class="stat-box">
+            <h3>✓ Выполнено</h3>
+            <div class="number">{{ stats.completed_orders }}</div>
+        </div>
+        <div class="stat-box">
+            <h3>💰 Общий доход</h3>
+            <div class="number">₽{{ "{:,.0f}".format(stats.total_revenue) }}</div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="admin-tabs">
+        <button class="tab-btn active" onclick="switchTab('orders')">📦 Заказы</button>
+        <button class="tab-btn" onclick="switchTab('products')">🏷️ Товары</button>
+    </div>
+    
+    <!-- Orders Tab -->
+    <div id="orders" class="tab-content active">
+        <h2>Список заказов</h2>
+        
+        {% if orders %}
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Номер заказа</th>
+                    <th>Клиент</th>
+                    <th>Email</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><strong>#{{ order.order_number }}</strong></td>
+                    <td>{{ order.customer_name }}</td>
+                    <td>{{ order.customer_email }}</td>
+                    <td><strong>₽{{ "{:,.0f}".format(order.total_amount) }}</strong></td>
+                    <td>
+                        <span class="status-badge status-{{ order.status }}">
+                            {% if order.status == 'new' %}
+                                🆕 Новый
+                            {% elif order.status == 'processing' %}
+                                ⏳ В обработке
+                            {% elif order.status == 'completed' %}
+                                ✓ Выполнен
+                            {% elif order.status == 'cancelled' %}
+                                ✕ Отменён
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>
+                        <button class="btn btn-primary btn-small" onclick="viewOrderDetail({{ order.id }})">
+                            Подробнее
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="order-detail">
+            <p>📭 Заказов ещё нет</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Order Detail Modal -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeOrderModal()">×</button>
+            <div id="order-detail-content">
+                <!-- Load here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Products Tab -->
+    <div id="products" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 style="margin: 0;">Управление товарами</h2>
+            <button class="btn btn-primary btn-add-product" onclick="showAddProductForm()">
+                ➕ Добавить товар
+            </button>
+        </div>
+        
+        <div id="products-list">
+            <!-- Load via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal" id="product-modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="closeProductModal()">×</button>
+        <h2 class="modal-title" id="product-modal-title">Добавить новый товар</h2>
+        
+        <form id="product-form" onsubmit="submitProductForm(event)">
+            <div class="form-group">
+                <label for="product-name">Название товара *</label>
+                <input type="text" id="product-name" class="form-control" placeholder="Например: Premium Hoodie" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-description">Описание *</label>
+                <textarea id="product-description" class="form-control" placeholder="Подробное описание товара..." rows="4" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-price">Цена (₽) *</label>
+                <input type="number" id="product-price" class="form-control" placeholder="2990" step="0.01" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-category">Категория *</label>
+                <input type="text" id="product-category" class="form-control" placeholder="Например: Одежда" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-image">URL изображения</label>
+                <input type="url" id="product-image" class="form-control" placeholder="https://example.com/image.jpg">
+            </div>
+            
+            <div class="form-group">
+                <label for="product-stock">Количество в наличии *</label>
+                <input type="number" id="product-stock" class="form-control" placeholder="50" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product-sizes">Размеры (через запятую)</label>
+                <input type="text" id="product-sizes" class="form-control" placeholder="XS, S, M, L, XL, XXL" value="XS, S, M, L, XL, XXL">
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" id="product-submit-btn">Добавить товар</button>
+                <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Отменить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+// Tab switching
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const tab = document.getElementById(tabName);
+    if (tab) {
+        tab.classList.add('active');
+    }
+    event.target.classList.add('active');
+    
+    if (tabName === 'products') {
+        loadProducts();
+    }
+}
+
+// Show add product form
+function showAddProductForm() {
+    document.getElementById('product-modal-title').textContent = '➕ Добавить новый товар';
+    document.getElementById('product-form').reset();
+    document.getElementById('product-sizes').value = 'XS, S, M, L, XL, XXL';
+    document.getElementById('product-submit-btn').textContent = 'Добавить товар';
+    document.getElementById('product-modal').style.display = 'flex';
+}
+
+// Close product modal
+function closeProductModal() {
+    document.getElementById('product-modal').style.display = 'none';
+}
+
+// Submit product form
+async function submitProductForm(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('product-submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Загрузка...';
+    
+    try {
+        const productData = {
+            name: document.getElementById('product-name').value,
+            description: document.getElementById('product-description').value,
+            price: parseFloat(document.getElementById('product-price').value),
+            category: document.getElementById('product-category').value,
+            image_url: document.getElementById('product-image').value || 'https://via.placeholder.com/300?text=Product',
+            stock: parseInt(document.getElementById('product-stock').value),
+            sizes: document.getElementById('product-sizes').value
+        };
+        
+        const response = await fetch('/api/admin/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('✓ ' + data.message, 'success');
+            closeProductModal();
+            loadProducts();
+        } else {
+            showNotification('✗ Ошибка: ' + data.message, 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('✗ Ошибка при добавлении товара', 'danger');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// Load products
+async function loadProducts() {
+    try {
+        const response = await fetch('/api/admin/products');
+        const data = await response.json();
+        
+        const container = document.getElementById('products-list');
+        if (data.products.length === 0) {
+            container.innerHTML = '<div class="order-detail"><p>📭 Товаров ещё нет. <a href="#" onclick="showAddProductForm(); return false;">Добавить первый товар</a></p></div>';
+            return;
+        }
+        
+        container.innerHTML = data.products.map(p => `
+            <div class="product-card-admin">
+                <img src="${p.image_url}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300?text=Product'">
+                <div class="product-card-admin-info">
+                    <h4>${p.name}</h4>
+                    <p><strong>Категория:</strong> ${p.category}</p>
+                    <p><strong>Цена:</strong> ₽${p.price.toLocaleString()}</p>
+                    <p><strong>В наличии:</strong> ${p.stock} шт.</p>
+                </div>
+                <div class="product-card-admin-actions">
+                    <button class="btn btn-primary btn-small" onclick="editProduct(${p.id})">✏️ Редактировать</button>
+                    <button class="btn btn-danger" onclick="deleteProduct(${p.id})">🗑️ Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('products-list').innerHTML = '<div class="order-detail"><p>❌ Ошибка загрузки товаров</p></div>';
+    }
+}
+
+// Edit product (can be implemented later)
+function editProduct(productId) {
+    showNotification('✏️ Функция редактирования в разработке', 'info');
+}
+
+// Delete product
+async function deleteProduct(productId) {
+    if (!confirm('⚠️ Вы уверены? Это действие нельзя отменить.')) return;
+    
+    try {
+        const response = await fetch(`/api/admin/products/${productId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+        if (data.success) {
+            showNotification('✓ Товар удалён', 'success');
+            loadProducts();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('✗ Ошибка при удалении', 'danger');
+    }
+}
+
+// View order detail
+async function viewOrderDetail(orderId) {
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}`);
+        const data = await response.json();
+        const order = data.order;
+        
+        const html = `
+            <h2>🛒 Заказ #${order.order_number}</h2>
+            
+            <div class="order-detail">
+                <h4>Информация о клиенте</h4>
+                <p><strong>Имя:</strong> ${order.customer_name}</p>
+                <p><strong>Email:</strong> ${order.customer_email}</p>
+                <p><strong>Телефон:</strong> ${order.customer_phone || 'Не указан'}</p>
+                <p><strong>Адрес доставки:</strong> ${order.customer_address || 'Не указан'}</p>
+            </div>
+            
+            <div class="order-detail">
+                <h4>Товары в заказе</h4>
+                <ul class="order-items-list">
+                    ${order.items.map(item => `
+                        <li>
+                            <strong>${item.product_name}</strong> (${item.size})<br>
+                            Количество: ${item.quantity} × ₽${item.price.toLocaleString()} = <strong>₽${(item.price * item.quantity).toLocaleString()}</strong>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+            
+            <div class="order-detail">
+                <h4>💰 Итого: ₽${order.total_amount.toLocaleString()}</h4>
+            </div>
+            
+            <div class="order-detail">
+                <h4>Статус заказа</h4>
+                <select id="order-status" class="form-control" style="margin-bottom: 15px;">
+                    <option value="new" ${order.status === 'new' ? 'selected' : ''}>🆕 Новый</option>
+                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>⏳ В обработке</option>
+                    <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✓ Выполнен</option>
+                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>✕ Отменён</option>
+                </select>
+                <button class="btn btn-primary" onclick="updateOrderStatus(${order.id})">
+                    💾 Сохранить изменения
+                </button>
+            </div>
+        `;
+        
+        document.getElementById('order-detail-content').innerHTML = html;
+        document.getElementById('order-modal').style.display = 'flex';
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('✗ Ошибка при загрузке заказа', 'danger');
+    }
+}
+
+// Update order status
+async function updateOrderStatus(orderId) {
+    const status = document.getElementById('order-status').value;
+    
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showNotification('✓ Статус обновлён', 'success');
+            closeOrderModal();
+            setTimeout(() => location.reload(), 800);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('✗ Ошибка при обновлении', 'danger');
+    }
+}
+
+// Close modals
+function closeOrderModal() {
+    document.getElementById('order-modal').style.display = 'none';
+}
+
+// Close on outside click
+window.onclick = function(event) {
+    const orderModal = document.getElementById('order-modal');
+    const productModal = document.getElementById('product-modal');
+    
+    if (event.target === orderModal) {
+        orderModal.style.display = 'none';
+    }
+    if (event.target === productModal) {
+        productModal.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

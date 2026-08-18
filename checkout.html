@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Оформление заказа - 2SOUL{% endblock %}
+
+{% block content %}
+<section class="checkout-section">
+    <div class="container">
+        <h1 class="page-title">Оформление заказа</h1>
+        
+        <div class="checkout-layout">
+            <!-- Checkout Form -->
+            <div class="checkout-form-container">
+                <form id="checkout-form" class="checkout-form">
+                    <fieldset>
+                        <legend>Контактная информация</legend>
+                        <div class="form-group">
+                            <label>Ф.И.О. *</label>
+                            <input type="text" name="customer_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" name="customer_email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Телефон</label>
+                            <input type="tel" name="customer_phone" placeholder="+7 (999) 000-00-00">
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>Адрес доставки</legend>
+                        <div class="form-group">
+                            <label>Адрес *</label>
+                            <textarea name="customer_address" required placeholder="Город, улица, дом..."></textarea>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>Примечания к заказу</legend>
+                        <div class="form-group">
+                            <label>Дополнительная информация</label>
+                            <textarea name="notes" placeholder="Ваши пожелания..."></textarea>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="checkout-summary">
+                <h2>Ваш заказ</h2>
+                <div id="order-items">
+                    <!-- Items load here -->
+                </div>
+                
+                <div class="summary-totals">
+                    <div class="summary-row">
+                        <span>Сумма:</span>
+                        <span id="checkout-total">₽0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Доставка:</span>
+                        <span>Бесплатно</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Итого:</span>
+                        <span id="checkout-grand-total">₽0</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-large" id="submit-btn" onclick="submitOrder()">
+                    Перейти к оплате
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+let orderData = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCheckoutData();
+});
+
+function loadCheckoutData() {
+    fetch('/api/cart')
+        .then(response => response.json())
+        .then(data => {
+            renderOrderItems(data.items);
+            const total = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            orderData.total = total;
+            document.getElementById('checkout-total').textContent = `₽${total.toFixed(0)}`;
+            document.getElementById('checkout-grand-total').textContent = `₽${total.toFixed(0)}`;
+        });
+}
+
+function renderOrderItems(items) {
+    const container = document.getElementById('order-items');
+    container.innerHTML = items.map(item => `
+        <div class="order-item">
+            <span>${item.name} (${item.size})</span>
+            <span>×${item.quantity}</span>
+            <span>₽${(item.price * item.quantity).toFixed(0)}</span>
+        </div>
+    `).join('');
+}
+
+function submitOrder() {
+    const form = document.getElementById('checkout-form');
+    const formData = new FormData(form);
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Обработка...';
+    
+    fetch('/api/checkout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            customer_name: formData.get('customer_name'),
+            customer_email: formData.get('customer_email'),
+            customer_phone: formData.get('customer_phone'),
+            customer_address: formData.get('customer_address'),
+            notes: formData.get('notes')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to payment page
+            window.location.href = `/payment/${data.order_id}`;
+        } else {
+            alert('Ошибка: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Перейти к оплате';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при оформлении заказа');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Перейти к оплате';
+    });
+}
+</script>
+{% endblock %}

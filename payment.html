@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Оплата - 2SOUL{% endblock %}
+
+{% block content %}
+<section class="checkout-section">
+    <div class="container">
+        <h1 class="page-title">Оплата заказа #{{ order.order_number }}</h1>
+        
+        <div class="checkout-layout">
+            <div style="background: white; padding: 30px; border-radius: 8px;">
+                <div style="margin-bottom: 30px;">
+                    <h2>Сумма к оплате</h2>
+                    <p style="font-size: 32px; font-weight: bold; color: #667eea; margin: 15px 0;">
+                        ₽{{ order.total_amount|int }}
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h3>Контактная информация</h3>
+                    <p><strong>Имя:</strong> {{ order.customer_name }}</p>
+                    <p><strong>Email:</strong> {{ order.customer_email }}</p>
+                    <p><strong>Адрес:</strong> {{ order.customer_address }}</p>
+                </div>
+                
+                <div>
+                    <button class="btn btn-primary btn-large" onclick="initiatePayment({{ order.id }})">
+                        Перейти к оплате через YooKassa
+                    </button>
+                    <p style="font-size: 12px; color: #999; margin-top: 15px;">
+                        Безопасная оплата через Yandex.Kassa. Поддерживаются карты, электронные кошельки и другие способы.
+                    </p>
+                </div>
+            </div>
+            
+            <div>
+                <div style="background: #f7fafc; padding: 25px; border-radius: 8px;">
+                    <h3>Заказ</h3>
+                    <div id="order-items-summary"></div>
+                    <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 16px;">
+                            <span>Итого:</span>
+                            <span>₽{{ order.total_amount|int }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load order items
+    fetch('/api/cart')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('order-items-summary');
+            container.innerHTML = data.items.map(item => `
+                <div style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                    <span>${item.name} (${item.size}) ×${item.quantity}</span>
+                    <span>₽${(item.price * item.quantity).toLocaleString()}</span>
+                </div>
+            `).join('');
+        });
+});
+
+function initiatePayment(orderId) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Обработка...';
+    
+    fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to YooKassa payment
+            window.location.href = data.confirmation_url;
+        } else {
+            alert('Ошибка создания платежа: ' + data.message);
+            btn.disabled = false;
+            btn.textContent = 'Перейти к оплате через YooKassa';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при создании платежа');
+        btn.disabled = false;
+        btn.textContent = 'Перейти к оплате через YooKassa';
+    });
+}
+</script>
+{% endblock %}
